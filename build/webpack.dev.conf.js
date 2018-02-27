@@ -49,7 +49,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
         })
       })
 
-      // app.use('/api', apiRoutes)
+      app.use('/api', apiRoutes)
     },
 
     clientLogLevel: 'warning',
