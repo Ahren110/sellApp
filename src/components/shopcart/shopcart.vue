@@ -1,6 +1,6 @@
 <template>
   <div class="shopcart">
-    <div class="content">
+    <div class="content" @click="toggleList">
       <div class="content-left">
         <div class="logo-wrapper">
           <div class="logo" :class="{'highlight' : totalCount > 0}">
@@ -17,15 +17,40 @@
         </div>
       </div>
       <div class="ball-container">
-        <div v-for="(item, index) in balls" v-show="item.show" class="ball" :key="index">
-          <div class="inner"></div>
+        <div v-for="(item, index) in balls" :key="index">
+          <transition name="drop" v-on:before-enter="beforeEnter" v-on:enter="enter" v-on:after-enter="afterEnter" :duration="{ enter: 10000}">
+            <div class="ball"  v-show="item.show">
+            </div>
+          </transition>
         </div>
       </div>
+      <transition name="fold">
+        <div class="shopcart-list" v-show="listShow">
+          <div class="list-header">
+            <h1 class="title">购物车</h1>
+            <span class="empty">清空</span>
+          </div>
+          <div class="list-content">
+            <ul>
+              <li class="food" v-for="(food, index) in selectFoods" :key="index">
+                <span class="name">{{food.name}}</span>
+                <div class="price">
+                  <span>¥{{food.price*food.count}}</span>
+                </div>
+                <div class="cartcontrol-wrapper">
+                  <cartcontrol :food="food"></cartcontrol>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
 
 <script>
+import cartcontrol from '@/components/cartcontrol/cartcontrol'
 export default {
   props: {
     selectFoods: {
@@ -42,6 +67,9 @@ export default {
       type: Number,
       default: 0
     }
+  },
+  components: {
+    cartcontrol
   },
   data () {
     return {
@@ -61,7 +89,9 @@ export default {
         {
           show: false
         }
-      ]
+      ],
+      dropBalls: [],
+      fold: true
     }
   },
   computed: {
@@ -95,17 +125,72 @@ export default {
       } else {
         return 'enough'
       }
+    },
+    listShow () {
+      if (!this.totalCount) {
+        return false
+      }
+      let show = !this.fold
+      return show
     }
   },
   methods: {
     drop (el) {
-      console.log(el)
+      for (let i = 0; i < this.balls.length; i++) {
+        let ball = this.balls[i]
+        if (!ball.show) {
+          ball.show = true
+          ball.el = el
+          this.dropBalls.push(ball)
+          return
+        }
+      }
+    },
+    toggleList () {
+      if (!this.totalCount) {
+        return
+      }
+      this.fold = !this.fold
+    },
+    beforeEnter (el) {
+      console.log(111)
+      let count = this.balls.length
+      while (count--) {
+        let ball = this.balls[count]
+        if (ball.show) {
+          let rect = ball.el.getBoundingClientRect()
+          let x = rect.left - 32
+          let y = -(window.innerHeight - rect.top - 22)
+          el.style.display = ''
+          el.style.webkitTransform = `translate3d(${x}px,${y}px,0)`
+          el.style.transform = `translate3d(${x}px,${y}px,0)`
+        }
+      }
+    },
+    enter (el, done) {
+      /* eslint-disable no-unused-vars */
+      console.log(222)
+      let rf = el.offsetHeight
+      // this.$nextTick(() => {
+      //   el.style.webkitTransform = 'translate3d(0,0,0)'
+      //   el.style.transform = 'translate3d(0,0,0)'
+      // })
+      done()
+    },
+    afterEnter (el) {
+      console.log(33)
+      let ball = this.dropBalls.shift()
+      if (ball) {
+        // ball.show = false
+        // el.style.display = 'none'
+      }
     }
   }
 }
 </script>
 
 <style lang="stylus">
+@import "../../common/stylus/mixin.styl"
   .shopcart
     position: fixed
     left: 0
@@ -202,12 +287,67 @@ export default {
         left: 32px
         bottom: 22px
         z-index: 200
-        &.drop-transition
-          transition: all 0.4s
-          .inner
-            width: 16px
-            height: 16px
-            border-radius: 50%
-            background: rgb(0, 160, 220)
-            transition: all 0.4s
+        width: 16px
+        height: 16px
+        border-radius: 50%
+        background: rgb(0, 160, 220)
+    .drop-enter-active
+      transition: all 8s
+    // .drop-enter
+    //   transform: translate3d(289px, -377px, 0px);
+    // .drop-enter-to
+    //   transform: translate3d(0, 0, 0)
+    .shopcart-list
+      position: absolute
+      left: 0
+      top: 0
+      z-index: -1
+      width: 100%
+      transform: translate3d(0, -100%, 0)
+      .list-header
+        height: 40px
+        line-height: 40px
+        padding: 0 18px
+        background: #f3f5f7
+        border-bottom: 1px solid rgba(7, 17, 27, 0.1)
+        .title
+          float: left
+          font-size: 14px
+          color: rgb(7, 17, 27)
+        .empty
+          float: right
+          font-size: 12px
+          color: rgb(0, 160, 220)
+      .list-content
+        padding: 18px
+        overflow: hidden
+        max-height: 217px
+        background: #ffffff
+        .food
+          position: relative
+          padding: 12px 0
+          box-sizing: border-box
+          border-1px(rgba(7, 17, 27, 0.1))
+          .name
+            line-height: 24px
+            font-size: 14px
+            color: rgb(7, 17, 27)
+          .price
+            position: absolute
+            right: 90px
+            bottom: 12px
+            line-height: 24px
+            font-size: 14px
+            font-weight: 700
+            color: rgb(240, 20, 20)
+          .cartcontrol-wrapper
+            position: absolute
+            right: 0
+            bottom: 6px
+    .fold-enter-active, .fold-leave-active
+      transition: all 0.8s
+    .fold-enter, .fold-leave-to
+      transform: translate3d(0, 0, 0)
+    .fold-enter-to, .fold-leave
+      transform: translate3d(0, -100%, 0)
 </style>
