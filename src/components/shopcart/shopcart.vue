@@ -18,8 +18,9 @@
       </div>
       <div class="ball-container">
         <div v-for="(item, index) in balls" :key="index">
-          <transition name="drop" v-on:before-enter="beforeEnter" v-on:enter="enter" v-on:after-enter="afterEnter" :duration="{ enter: 10000}">
+          <transition name="drop" v-on:before-enter="beforeEnter" v-on:enter="enter" v-on:after-enter="afterEnter">
             <div class="ball"  v-show="item.show">
+              <div class="inner inner-hook"></div>
             </div>
           </transition>
         </div>
@@ -30,7 +31,7 @@
             <h1 class="title">购物车</h1>
             <span class="empty">清空</span>
           </div>
-          <div class="list-content">
+          <div class="list-content" ref="listContent">
             <ul>
               <li class="food" v-for="(food, index) in selectFoods" :key="index">
                 <span class="name">{{food.name}}</span>
@@ -50,6 +51,7 @@
 </template>
 
 <script>
+import BScroll from 'better-scroll'
 import cartcontrol from '@/components/cartcontrol/cartcontrol'
 export default {
   props: {
@@ -134,6 +136,22 @@ export default {
       return show
     }
   },
+  watch: {
+    fold () {
+      let show = !this.fold
+      if (show) {
+        this.$nextTick(() => {
+          if (!this.scroll) {
+            this.scroll = new BScroll(this.$refs.listContent, {
+              click: true
+            })
+          } else {
+            this.scroll.refresh()
+          }
+        })
+      }
+    }
+  },
   methods: {
     drop (el) {
       for (let i = 0; i < this.balls.length; i++) {
@@ -162,27 +180,32 @@ export default {
           let x = rect.left - 32
           let y = -(window.innerHeight - rect.top - 22)
           el.style.display = ''
-          el.style.webkitTransform = `translate3d(${x}px,${y}px,0)`
-          el.style.transform = `translate3d(${x}px,${y}px,0)`
+          el.style.webkitTransform = `translate3d(0,${y}px,0)`
+          el.style.transform = `translate3d(0,${y}px,0)`
+          let inner = el.getElementsByClassName('inner-hook')[0]
+          inner.style.webkitTransform = `translate3d(${x}px,0,0)`
+          inner.style.transform = `translate3d(${x}px,0,0)`
         }
       }
     },
-    enter (el, done) {
+    enter (el) {
       /* eslint-disable no-unused-vars */
       console.log(222)
       let rf = el.offsetHeight
-      // this.$nextTick(() => {
-      //   el.style.webkitTransform = 'translate3d(0,0,0)'
-      //   el.style.transform = 'translate3d(0,0,0)'
-      // })
-      done()
+      this.$nextTick(() => {
+        el.style.webkitTransform = 'translate3d(0,0,0)'
+        el.style.transform = 'translate3d(0,0,0)'
+        let inner = el.getElementsByClassName('inner-hook')[0]
+        inner.style.webkitTransform = 'translate3d(0,0,0)'
+        inner.style.transform = 'translate3d(0,0,0)'
+      })
     },
     afterEnter (el) {
       console.log(33)
       let ball = this.dropBalls.shift()
       if (ball) {
-        // ball.show = false
-        // el.style.display = 'none'
+        ball.show = false
+        el.style.display = 'none'
       }
     }
   }
@@ -287,16 +310,14 @@ export default {
         left: 32px
         bottom: 22px
         z-index: 200
-        width: 16px
-        height: 16px
-        border-radius: 50%
-        background: rgb(0, 160, 220)
+        .inner
+          transition: all 0.4s linear
+          width: 16px
+          height: 16px
+          border-radius: 50%
+          background: rgb(0, 160, 220)
     .drop-enter-active
-      transition: all 8s
-    // .drop-enter
-    //   transform: translate3d(289px, -377px, 0px);
-    // .drop-enter-to
-    //   transform: translate3d(0, 0, 0)
+      transition: all 0.4s cubic-bezier(0.49, -0.29, 0.75, 0.41)
     .shopcart-list
       position: absolute
       left: 0
