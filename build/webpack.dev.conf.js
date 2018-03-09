@@ -42,7 +42,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
           data: goods
         })
       })
-      apiRoutes.get('/rating', function (req, res) {
+      apiRoutes.get('/ratings', function (req, res) {
         res.json({
           erron: 0,
           data: ratings
