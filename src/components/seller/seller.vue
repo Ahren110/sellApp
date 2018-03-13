@@ -28,7 +28,10 @@
             </div>
           </li>
         </ul>
-
+        <div class="favorite" @click="toggleFavorite">
+          <span class="icon-favorite" :class="{'active': favorite}"></span>
+          <span class="text">{{favoriteText}}</span>
+        </div>
       </div>
       <split></split>
       <div class="bulletin">
@@ -53,7 +56,13 @@
             </li>
           </ul>
         </div>
-
+      </div>
+      <split></split>
+      <div class="info">
+        <h1 class="title">商家信息</h1>
+        <ul>
+          <li class="info-item" v-for="(info, index) in seller.infos" :key="index">{{info}}</li>
+        </ul>
       </div>
     </div>
   </div>
@@ -61,6 +70,7 @@
 
 <script>
 import split from '@/components/split/split'
+import {saveToLocal, loadFormLocal} from 'common/js/store'
 import star from '@/components/star/star'
 import BScroll from 'better-scroll'
 export default {
@@ -73,6 +83,18 @@ export default {
     star,
     split
   },
+  data () {
+    return {
+      favorite: (() => {
+        return loadFormLocal(this.seller.id, 'favorite', false)
+      })()
+    }
+  },
+  computed: {
+    favoriteText () {
+      return this.favorite ? '已收藏' : '收藏'
+    }
+  },
   created () {
     this.classMap = ['decrease', 'discount', 'special', 'invoice', 'guarantee']
   },
@@ -82,11 +104,15 @@ export default {
     })
     this.picScroll = new BScroll(this.$refs.picWrapper, {
       click: true,
-      scrollY: true,
-      eventPassthrough: 'vertical'
+      scrollX: true
+      // eventPassthrough: 'vertical'
     })
   },
   methods: {
+    toggleFavorite (event) {
+      this.favorite = !this.favorite
+      saveToLocal(this.seller.id, 'favorite', this.favorite)
+    }
     // _initScroll () {
     //   if (!this.scroll) {
     //     this.scroll = new BScroll(this.$refs.seller, {
@@ -125,6 +151,7 @@ export default {
     width: 100%
     overflow: hidden
     .overview
+      position: relative
       padding: 18px
       .title
         margin-bottom: 8px
@@ -165,6 +192,24 @@ export default {
             color: rgb(7, 17, 27)
             .stress
               font-size: 24px
+      .favorite
+        position: absolute
+        width: 50px
+        right: 5px
+        top: 18px
+        text-align: center
+        .icon-favorite
+          display: block
+          margin-bottom: 4px
+          line-height: 24px
+          font-size: 24px
+          color: #d4d6d8
+          &.active
+            color: rgb(240, 20, 20)
+        .text
+          line-height: 10px
+          font-size: 10px
+          color: rgb(77, 25, 93)
     .bulletin
       padding: 18px 18px 0 18px
       .title
@@ -228,4 +273,17 @@ export default {
             height: 90px
             &:last-child
               margin-right: 0
+    .info
+      padding: 18px 18px 0 18px
+      color: rgb(7, 17, 27)
+      .title
+        padding-bottom: 12px
+        line-height: 14px
+        border-1px(rgba(7, 17, 27, 0.1))
+        font-size: 14px
+      .info-item
+        padding: 16px 12px
+        line-height: 16px
+        border-1px(rgba(7, 17, 27, 0.1))
+        font-size: 12px
 </style>

@@ -12,11 +12,14 @@
         <router-link :to="{path: '/seller'}">商家</router-link>
         </div>
     </div>
-    <router-view :seller="seller"></router-view>
+    <keep-alive>
+      <router-view :seller="seller"></router-view>
+    </keep-alive>
   </div>
 </template>
 
 <script>
+import {urlParse} from 'common/js/util'
 import Sheader from '@/components/header/header'
 
 const ERR_OK = 0
@@ -28,14 +31,18 @@ export default {
   data () {
     return {
       seller: {
-
+        id: (() => {
+          let queryParam = urlParse()
+          return queryParam.id
+        })()
       }
     }
   },
   created () {
-    this.$http.get('/api/seller').then((res) => {
+    this.$http.get('/api/seller?id=' + this.seller.id).then((res) => {
       if (res.body.errno === ERR_OK) {
-        this.seller = res.body.data
+        // this.seller = res.body.data
+        this.seller = Object.assign({}, this.seller, res.body.data)
       }
     })
   }
